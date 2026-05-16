@@ -4,6 +4,8 @@ import './CrosswordGrid.css'
 export default function CrosswordGrid({ grid, size, onUpdateCell }) {
   const [selected, setSelected] = useState(null)
   const [direction, setDirection] = useState('across') // 'across' | 'down'
+  const [suggestions, setSuggestions] = useState(null)
+  const [isLoading, setIsLoading] = useState(false)
   const cellRefs = useRef({})
 
   const getRef = (row, col) => {
@@ -76,6 +78,46 @@ export default function CrosswordGrid({ grid, size, onUpdateCell }) {
     }
   }, [grid, direction, move, onUpdateCell])
 
+  const fetchSuggestions = useCallback(async () => {
+    const info = getWordInfo(grid, selected, direction, size)
+    if (!info) return
+    setIsLoading(true)
+    setSuggestions(null)
+    try {
+      const res = await fetch(`https://api.datamuse.com/words?sp=${info.pattern}&max=50`)
+      const data = await res.json()
+      const seen = new Set()
+      const results = []
+      for (const d of data) {
+        const word = d.word.replace(/\s+/g, '').toUpperCase()
+        if (word.length >= 2 && !seen.has(word) && wordMatchesSlot(word.toLowerCase(), info.cells)) {
+          seen.add(word)
+          results.push(word)
+        }
+      }
+      setSuggestions(results)
+    } catch {
+      setSuggestions([])
+    } finally {
+      setIsLoading(false)
+    }
+  }, [grid, selected, direction, size])
+
+  const applyWord = useCallback((word) => {
+    const info = getWordInfo(grid, selected, direction, size)
+    if (!info) return
+    if (info.direction === 'across') {
+      word.split('').forEach((ch, i) =>
+        onUpdateCell(info.row, info.startCol + i, { letter: ch })
+      )
+    } else {
+      word.split('').forEach((ch, i) =>
+        onUpdateCell(info.startRow + i, info.col, { letter: ch })
+      )
+    }
+    setSuggestions(null)
+  }, [grid, selected, direction, size, onUpdateCell])
+
   // Compute clue numbers
   const clueNumbers = computeClueNumbers(grid, size)
 
@@ -126,6 +168,27 @@ export default function CrosswordGrid({ grid, size, onUpdateCell }) {
           })
         )}
       </div>
+      <div className="suggest-bar">
+        <button
+          className="btn-suggest"
+          onClick={fetchSuggestions}
+          disabled={!selected || isLoading}
+        >
+          {isLoading ? 'Loading…' : 'Suggest Word'}
+        </button>
+        {suggestions !== null && (
+          <div className="suggestions-panel">
+            {suggestions.length === 0
+              ? <span className="no-suggestions">No suggestions found</span>
+              : suggestions.map(w => (
+                  <button key={w} className="suggestion-word" onClick={() => applyWord(w)}>
+                    {w}
+                  </button>
+                ))
+            }
+          </div>
+        )}
+      </div>
     </div>
   )
 }
@@ -146,6 +209,46 @@ function isInWord(grid, selected, direction, r, c, size) {
     let end = selected.row
     while (end < size - 1 && !grid[end + 1][c].black) end++
     return r >= start && r <= end
+  }
+}
+
+function buildPattern(cells) {
+  // Use known letters as anchors; trailing empty cells become * so shorter words are returned too
+  const lastFilled = cells.reduce((acc, c, i) => (c ? i : acc), -1)
+  if (lastFilled === -1) return '??*' // all empty: return common words of any length ≥ 2
+  return cells.slice(0, lastFilled + 1).map(c => c || '?').join('') + '*'
+}
+
+function wordMatchesSlot(word, cells) {
+  // word has already had spaces stripped and is lowercase; cells are lowercase or ''
+  if (word.length > cells.length) return false
+  for (let i = 0; i < word.length; i++) {
+    if (cells[i] && cells[i] !== word[i]) return false
+  }
+  return true
+}
+
+function getWordInfo(grid, selected, direction, size) {
+  if (!selected) return null
+  const { row, col } = selected
+  if (direction === 'across') {
+    let start = col
+    while (start > 0 && !grid[row][start - 1].black) start--
+    let end = col
+    while (end < size - 1 && !grid[row][end + 1].black) end++
+    const cells = Array.from({ length: end - start + 1 }, (_, i) =>
+      grid[row][start + i].letter.toLowerCase()
+    )
+    return { cells, pattern: buildPattern(cells), direction: 'across', row, startCol: start }
+  } else {
+    let start = row
+    while (start > 0 && !grid[start - 1][col].black) start--
+    let end = row
+    while (end < size - 1 && !grid[end + 1][col].black) end++
+    const cells = Array.from({ length: end - start + 1 }, (_, i) =>
+      grid[start + i][col].letter.toLowerCase()
+    )
+    return { cells, pattern: buildPattern(cells), direction: 'down', col, startRow: start }
   }
 }
 

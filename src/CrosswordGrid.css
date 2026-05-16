@@ -74,6 +74,67 @@
   outline: none;
 }
 
+.suggest-bar {
+  margin-top: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.btn-suggest {
+  padding: 8px 24px;
+  font-size: 14px;
+  font-weight: 600;
+  border: 1.5px solid #2a7a2a;
+  background: transparent;
+  color: #2a7a2a;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.btn-suggest:hover:not(:disabled) {
+  background: #2a7a2a;
+  color: #fff;
+}
+
+.btn-suggest:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.suggestions-panel {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+  max-width: 600px;
+}
+
+.suggestion-word {
+  padding: 5px 14px;
+  font-size: 15px;
+  font-weight: 700;
+  font-family: 'Georgia', serif;
+  letter-spacing: 1px;
+  background: #fff;
+  border: 1.5px solid #999;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background 0.12s, border-color 0.12s;
+}
+
+.suggestion-word:hover {
+  background: #f5c518;
+  border-color: #c8a200;
+}
+
+.no-suggestions {
+  font-size: 14px;
+  color: #888;
+}
+
 @media print {
   .app-header {
     display: none;
@@ -106,5 +167,9 @@
   .cell.black {
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
+  }
+
+  .suggest-bar {
+    display: none;
   }
 }
