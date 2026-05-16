@@ -30,7 +30,10 @@ export default function App() {
       <header className="app-header">
         <h1>Crossword Maker</h1>
         <p className="hint">Click a cell to type a letter &middot; Press <kbd>Space</kbd> or <kbd>.</kbd> to toggle black square &middot; Arrow keys to navigate</p>
-        <button className="btn-clear" onClick={clearGrid}>Clear Grid</button>
+        <div className="header-actions">
+          <button className="btn-print" onClick={() => window.print()}>Print Puzzle</button>
+          <button className="btn-clear" onClick={clearGrid}>Clear Grid</button>
+        </div>
       </header>
       <main>
         <CrosswordGrid grid={grid} size={GRID_SIZE} onUpdateCell={updateCell} />

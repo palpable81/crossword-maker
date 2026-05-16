@@ -39,6 +39,30 @@
   color: #333;
 }
 
+.header-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  margin-top: 4px;
+}
+
+.btn-print {
+  padding: 6px 18px;
+  font-size: 14px;
+  font-weight: 600;
+  border: 1.5px solid #1a6fd4;
+  background: transparent;
+  color: #1a6fd4;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.btn-print:hover {
+  background: #1a6fd4;
+  color: #fff;
+}
+
 .btn-clear {
   margin-top: 4px;
   padding: 6px 18px;

@@ -73,3 +73,38 @@
 .cell-input:focus {
   outline: none;
 }
+
+@media print {
+  .app-header {
+    display: none;
+  }
+
+  .grid-wrapper {
+    padding: 0;
+  }
+
+  .crossword-grid {
+    box-shadow: none;
+  }
+
+  .cell.highlighted,
+  .cell.selected {
+    background: #fff !important;
+  }
+
+  .cell.empty {
+    background: #1a1a1a !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .cell.empty .cell-number,
+  .cell.empty .cell-input {
+    display: none;
+  }
+
+  .cell.black {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+}

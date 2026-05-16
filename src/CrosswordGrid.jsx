@@ -98,6 +98,7 @@ export default function CrosswordGrid({ grid, size, onUpdateCell }) {
                 className={[
                   'cell',
                   cell.black ? 'black' : '',
+                  (!cell.black && !cell.letter) ? 'empty' : '',
                   isSelected ? 'selected' : '',
                   (!cell.black && inWord && !isSelected) ? 'highlighted' : '',
                 ].filter(Boolean).join(' ')}
