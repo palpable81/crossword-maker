@@ -253,13 +253,14 @@ function getWordInfo(grid, selected, direction, size) {
 }
 
 function computeClueNumbers(grid, size) {
+  const isOpen = (r, c) => r >= 0 && r < size && c >= 0 && c < size && !grid[r][c].black && grid[r][c].letter
   const numbers = {}
   let n = 1
   for (let r = 0; r < size; r++) {
     for (let c = 0; c < size; c++) {
-      if (grid[r][c].black) continue
-      const acrossStart = (c === 0 || grid[r][c - 1].black) && c < size - 1 && !grid[r][c + 1].black
-      const downStart   = (r === 0 || grid[r - 1][c].black) && r < size - 1 && !grid[r + 1][c].black
+      if (!isOpen(r, c)) continue
+      const acrossStart = !isOpen(r, c - 1) && isOpen(r, c + 1)
+      const downStart   = !isOpen(r - 1, c) && isOpen(r + 1, c)
       if (acrossStart || downStart) {
         if (!numbers[r]) numbers[r] = {}
         numbers[r][c] = n++
