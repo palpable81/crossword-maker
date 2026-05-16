@@ -1,7 +1,8 @@
-import { useState, useRef, useCallback } from 'react'
+import { useState, useRef, useCallback, useEffect } from 'react'
+import { computeClueNumbers } from './gridUtils'
 import './CrosswordGrid.css'
 
-export default function CrosswordGrid({ grid, size, onUpdateCell }) {
+export default function CrosswordGrid({ grid, size, onUpdateCell, onSelectionChange }) {
   const [selected, setSelected] = useState(null)
   const [direction, setDirection] = useState('across') // 'across' | 'down'
   const [suggestions, setSuggestions] = useState(null)
@@ -118,6 +119,10 @@ export default function CrosswordGrid({ grid, size, onUpdateCell }) {
     setSuggestions(null)
   }, [grid, selected, direction, size, onUpdateCell])
 
+  useEffect(() => {
+    onSelectionChange?.(selected, direction)
+  }, [selected, direction])
+
   // Compute clue numbers
   const clueNumbers = computeClueNumbers(grid, size)
 
@@ -131,7 +136,7 @@ export default function CrosswordGrid({ grid, size, onUpdateCell }) {
           row.map((cell, c) => {
             const isSelected = selected?.row === r && selected?.col === c
             const inWord = selected && isInWord(grid, selected, direction, r, c, size)
-            const num = clueNumbers[r]?.[c]
+            const num = clueNumbers.numbers[r]?.[c]
             const ref = getRef(r, c)
 
             return (
@@ -252,20 +257,3 @@ function getWordInfo(grid, selected, direction, size) {
   }
 }
 
-function computeClueNumbers(grid, size) {
-  const isOpen = (r, c) => r >= 0 && r < size && c >= 0 && c < size && !grid[r][c].black && grid[r][c].letter
-  const numbers = {}
-  let n = 1
-  for (let r = 0; r < size; r++) {
-    for (let c = 0; c < size; c++) {
-      if (!isOpen(r, c)) continue
-      const acrossStart = !isOpen(r, c - 1) && isOpen(r, c + 1)
-      const downStart   = !isOpen(r - 1, c) && isOpen(r + 1, c)
-      if (acrossStart || downStart) {
-        if (!numbers[r]) numbers[r] = {}
-        numbers[r][c] = n++
-      }
-    }
-  }
-  return numbers
-}

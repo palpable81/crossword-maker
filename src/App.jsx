@@ -1,5 +1,7 @@
 import { useState, useCallback } from 'react'
 import CrosswordGrid from './CrosswordGrid'
+import ClueBank from './ClueBank'
+import { computeClueNumbers, findActiveClueNum } from './gridUtils'
 import './App.css'
 
 const GRID_SIZE = 12
@@ -12,6 +14,10 @@ function createEmptyGrid(size) {
 
 export default function App() {
   const [grid, setGrid] = useState(() => createEmptyGrid(GRID_SIZE))
+  const [clues, setClues] = useState({})
+  const [activeClueKey, setActiveClueKey] = useState(null)
+
+  const clueData = computeClueNumbers(grid, GRID_SIZE)
 
   const updateCell = useCallback((row, col, value) => {
     setGrid(prev => {
@@ -23,6 +29,17 @@ export default function App() {
 
   const clearGrid = useCallback(() => {
     setGrid(createEmptyGrid(GRID_SIZE))
+    setClues({})
+    setActiveClueKey(null)
+  }, [])
+
+  const handleSelectionChange = useCallback((selected, direction) => {
+    const num = findActiveClueNum(grid, selected, direction, clueData.numbers, GRID_SIZE)
+    setActiveClueKey(num ? `${num}-${direction}` : null)
+  }, [grid, clueData.numbers])
+
+  const handleClueChange = useCallback((key, value) => {
+    setClues(prev => ({ ...prev, [key]: value }))
   }, [])
 
   return (
@@ -36,7 +53,18 @@ export default function App() {
         </div>
       </header>
       <main>
-        <CrosswordGrid grid={grid} size={GRID_SIZE} onUpdateCell={updateCell} />
+        <ClueBank
+          clueData={clueData}
+          clues={clues}
+          activeClueKey={activeClueKey}
+          onClueChange={handleClueChange}
+        />
+        <CrosswordGrid
+          grid={grid}
+          size={GRID_SIZE}
+          onUpdateCell={updateCell}
+          onSelectionChange={handleSelectionChange}
+        />
       </main>
     </div>
   )
