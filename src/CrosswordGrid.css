@@ -146,6 +146,9 @@
 
   .crossword-grid {
     box-shadow: none;
+    background: #222;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
   }
 
   .cell.highlighted,
@@ -167,6 +170,10 @@
   .cell.black {
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
+  }
+
+  .cell-input {
+    color: transparent;
   }
 
   .suggest-bar {
