@@ -1,7 +1,7 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useRef, useEffect } from 'react'
 import CrosswordGrid from './CrosswordGrid'
 import ClueBank from './ClueBank'
-import { computeClueNumbers, findActiveClueNum } from './gridUtils'
+import { computeClueNumbers, findActiveClueNum, remapClues } from './gridUtils'
 import './App.css'
 
 const GRID_SIZE = 12
@@ -16,6 +16,16 @@ export default function App() {
   const [grid, setGrid] = useState(() => createEmptyGrid(GRID_SIZE))
   const [clues, setClues] = useState({})
   const [activeClueKey, setActiveClueKey] = useState(null)
+
+  const prevGridRef = useRef(grid)
+  useEffect(() => {
+    const prevGrid = prevGridRef.current
+    prevGridRef.current = grid
+    setClues(prev => {
+      if (!prev || Object.keys(prev).length === 0) return prev
+      return remapClues(prevGrid, grid, prev, GRID_SIZE)
+    })
+  }, [grid])
 
   const clueData = computeClueNumbers(grid, GRID_SIZE)
 

@@ -24,6 +24,49 @@ export function computeClueNumbers(grid, size) {
   return { numbers, acrossNums, downNums }
 }
 
+export function remapClues(oldGrid, newGrid, oldClues, size) {
+  if (!oldClues || Object.keys(oldClues).length === 0) return {}
+
+  const oldData = computeClueNumbers(oldGrid, size)
+  const newData = computeClueNumbers(newGrid, size)
+
+  const numToPos = {}
+  for (const r in oldData.numbers) {
+    for (const c in oldData.numbers[r]) {
+      numToPos[oldData.numbers[r][c]] = { row: Number(r), col: Number(c) }
+    }
+  }
+
+  const oldAcrossSet = new Set(oldData.acrossNums)
+  const oldDownSet   = new Set(oldData.downNums)
+  const newAcrossSet = new Set(newData.acrossNums)
+  const newDownSet   = new Set(newData.downNums)
+
+  const newClues = {}
+
+  for (const [oldKey, text] of Object.entries(oldClues)) {
+    if (!text) continue
+    const dashIdx = oldKey.lastIndexOf('-')
+    const num = Number(oldKey.slice(0, dashIdx))
+    const dir = oldKey.slice(dashIdx + 1)
+
+    if (dir === 'across' ? !oldAcrossSet.has(num) : !oldDownSet.has(num)) continue
+
+    const pos = numToPos[num]
+    if (!pos) continue
+
+    const newNum = newData.numbers[pos.row]?.[pos.col]
+    if (newNum == null) continue
+
+    if (dir === 'across' ? !newAcrossSet.has(newNum) : !newDownSet.has(newNum)) continue
+
+    const newKey = `${newNum}-${dir}`
+    if (!(newKey in newClues)) newClues[newKey] = text
+  }
+
+  return newClues
+}
+
 export function findActiveClueNum(grid, selected, direction, numbers, size) {
   if (!selected) return null
   const { row, col } = selected

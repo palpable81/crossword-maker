@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback, useEffect } from 'react'
-import { computeClueNumbers } from './gridUtils'
+import { computeClueNumbers, isOpen } from './gridUtils'
 import './CrosswordGrid.css'
 
 export default function CrosswordGrid({ grid, size, onUpdateCell, onSelectionChange }) {
@@ -238,7 +238,7 @@ function getWordInfo(grid, selected, direction, size) {
   const { row, col } = selected
   if (direction === 'across') {
     let start = col
-    while (start > 0 && !grid[row][start - 1].black) start--
+    while (start > 0 && isOpen(grid, row, start - 1, size)) start--
     let end = col
     while (end < size - 1 && !grid[row][end + 1].black) end++
     const cells = Array.from({ length: end - start + 1 }, (_, i) =>
@@ -247,7 +247,7 @@ function getWordInfo(grid, selected, direction, size) {
     return { cells, pattern: buildPattern(cells), direction: 'across', row, startCol: start }
   } else {
     let start = row
-    while (start > 0 && !grid[start - 1][col].black) start--
+    while (start > 0 && isOpen(grid, start - 1, col, size)) start--
     let end = row
     while (end < size - 1 && !grid[end + 1][col].black) end++
     const cells = Array.from({ length: end - start + 1 }, (_, i) =>
