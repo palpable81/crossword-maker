@@ -23,6 +23,7 @@ export default function ClueBank({ clueData, clues, activeClueKey, onClueChange 
                     onChange={e => onClueChange(key, e.target.value)}
                     placeholder="Enter clue…"
                   />
+                  <span className="clue-print">{clues[key] || ''}</span>
                 </div>
               )
             })

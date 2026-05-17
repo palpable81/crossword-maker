@@ -91,7 +91,15 @@ main {
   padding: 24px 24px 40px;
 }
 
+@page {
+  margin-top: 0.8in;
+}
+
 @media print {
+  .app {
+    min-height: unset;
+  }
+
   main {
     flex-direction: column;
     align-items: center;
