@@ -90,3 +90,11 @@ main {
   gap: 24px;
   padding: 24px 24px 40px;
 }
+
+@media print {
+  main {
+    justify-content: flex-start;
+    padding: 0;
+    gap: 16px;
+  }
+}

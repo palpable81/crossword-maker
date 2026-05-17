@@ -95,4 +95,14 @@
     border: none;
     width: auto;
   }
+
+  .clue-section-title {
+    border-bottom: none;
+  }
+
+  .clue-input {
+    border: none;
+    background: transparent;
+    padding: 0;
+  }
 }
