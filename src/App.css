@@ -93,8 +93,9 @@ main {
 
 @media print {
   main {
-    justify-content: flex-start;
+    flex-direction: column;
+    align-items: center;
     padding: 0;
-    gap: 16px;
+    gap: 24px;
   }
 }

@@ -142,6 +142,7 @@
 
   .grid-wrapper {
     padding: 0;
+    order: 1;
   }
 
   .crossword-grid {

@@ -88,21 +88,50 @@
 
 @media print {
   .clue-bank {
+    order: 2;
+    width: 591px;
+    margin: 0 auto;
     max-height: none;
     overflow: visible;
     position: static;
     box-shadow: none;
     border: none;
-    width: auto;
+    border-radius: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+    gap: 32px;
+  }
+
+  .clue-bank-title {
+    display: none;
+  }
+
+  .clue-section {
+    flex: 1;
+    margin-bottom: 0;
   }
 
   .clue-section-title {
-    border-bottom: none;
+    font-size: 11px;
+    border-bottom: 1px solid #222;
+    padding-bottom: 3px;
+    margin-bottom: 6px;
+  }
+
+  .clue-entry {
+    margin-bottom: 3px;
   }
 
   .clue-input {
     border: none;
     background: transparent;
     padding: 0;
+    font-size: 12px;
+  }
+
+  .clue-num {
+    font-size: 11px;
   }
 }
