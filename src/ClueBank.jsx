@@ -15,9 +15,9 @@ export default function ClueBank({ clueData, clues, activeClueKey, onClueChange 
               return (
                 <div key={key} className={`clue-entry${activeClueKey === key ? ' active' : ''}`}>
                   <span className="clue-num">{num}.</span>
-                  <input
+                  <textarea
                     className="clue-input"
-                    type="text"
+                    rows={2}
                     maxLength={200}
                     value={clues[key] || ''}
                     onChange={e => onClueChange(key, e.target.value)}

@@ -41,7 +41,7 @@
 
 .clue-entry {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 6px;
   margin-bottom: 6px;
 }
@@ -71,6 +71,9 @@
   background: #fff;
   transition: border-color 0.12s, background 0.12s;
   min-width: 0;
+  resize: none;
+  font-family: inherit;
+  line-height: 1.4;
 }
 
 .clue-input:focus {
