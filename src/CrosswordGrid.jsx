@@ -76,27 +76,36 @@ export default function CrosswordGrid({ grid, size, onUpdateCell, onSelectionCha
   const fetchSuggestions = useCallback(async () => {
     const info = getWordInfo(grid, selected, direction, size)
     if (!info) return
-    if (info.cells.length < minLen || info.cells.length > maxLen) {
-      setSuggestions([])
-      return
-    }
+
+    const offset = direction === 'across'
+      ? selected.col - info.startCol
+      : selected.row - info.startRow
+    const cellsFromHere = info.cells.slice(offset)
+    const maxPossible = cellsFromHere.length
+    const lengths = []
+    for (let L = minLen; L <= Math.min(maxLen, maxPossible); L++) lengths.push(L)
+    if (lengths.length === 0) { setSuggestions([]); return }
+
     setIsLoading(true)
     setSuggestions(null)
     try {
-      const res = await fetch(`https://api.datamuse.com/words?sp=${info.pattern}&max=50`)
-      const data = await res.json()
+      const perLength = 8
+      const allResults = await Promise.all(
+        lengths.map(async L => {
+          const pattern = buildPattern(cellsFromHere.slice(0, L))
+          const res = await fetch(`https://api.datamuse.com/words?sp=${pattern}&max=${perLength}`)
+          const data = await res.json()
+          return data
+            .map(d => d.word.replace(/\s+/g, '').toUpperCase())
+            .filter(w => w.length === L)
+            .slice(0, perLength)
+        })
+      )
       const seen = new Set()
       const results = []
-      for (const d of data) {
-        const word = d.word.replace(/\s+/g, '').toUpperCase()
-        if (
-          word.length >= minLen &&
-          word.length <= maxLen &&
-          !seen.has(word) &&
-          wordMatchesSlot(word.toLowerCase(), info.cells)
-        ) {
-          seen.add(word)
-          results.push(word)
+      for (const words of allResults) {
+        for (const word of words) {
+          if (!seen.has(word)) { seen.add(word); results.push(word) }
         }
       }
       setSuggestions(results)
@@ -112,11 +121,11 @@ export default function CrosswordGrid({ grid, size, onUpdateCell, onSelectionCha
     if (!info) return
     if (info.direction === 'across') {
       word.split('').forEach((ch, i) =>
-        onUpdateCell(info.row, info.startCol + i, { letter: ch })
+        onUpdateCell(info.row, selected.col + i, { letter: ch })
       )
     } else {
       word.split('').forEach((ch, i) =>
-        onUpdateCell(info.startRow + i, info.col, { letter: ch })
+        onUpdateCell(selected.row + i, info.col, { letter: ch })
       )
     }
     setSuggestions(null)
@@ -231,31 +240,24 @@ function buildPattern(cells) {
   return cells.map(c => c || '?').join('')
 }
 
-function wordMatchesSlot(word, cells) {
-  if (word.length !== cells.length) return false
-  for (let i = 0; i < word.length; i++) {
-    if (cells[i] && cells[i] !== word[i]) return false
-  }
-  return true
-}
 
 function getWordInfo(grid, selected, direction, size) {
   if (!selected) return null
   const { row, col } = selected
   if (direction === 'across') {
     let start = col
-    while (start > 0 && grid[row][start - 1].letter) start--
+    while (start > 0 && !grid[row][start - 1].black) start--
     let end = col
-    while (end < size - 1 && grid[row][end + 1].letter) end++
+    while (end < size - 1 && !grid[row][end + 1].black) end++
     const cells = Array.from({ length: end - start + 1 }, (_, i) =>
       grid[row][start + i].letter.toLowerCase()
     )
     return { cells, pattern: buildPattern(cells), direction: 'across', row, startCol: start }
   } else {
     let start = row
-    while (start > 0 && grid[start - 1][col].letter) start--
+    while (start > 0 && !grid[start - 1][col].black) start--
     let end = row
-    while (end < size - 1 && grid[end + 1][col].letter) end++
+    while (end < size - 1 && !grid[end + 1][col].black) end++
     const cells = Array.from({ length: end - start + 1 }, (_, i) =>
       grid[start + i][col].letter.toLowerCase()
     )
