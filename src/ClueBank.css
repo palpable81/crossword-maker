@@ -1,5 +1,5 @@
 .clue-bank {
-  width: 260px;
+  width: 360px;
   flex-shrink: 0;
   max-height: calc(100vh - 140px);
   overflow-y: auto;

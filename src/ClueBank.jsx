@@ -18,7 +18,7 @@ export default function ClueBank({ clueData, clues, activeClueKey, onClueChange 
                   <input
                     className="clue-input"
                     type="text"
-                    maxLength={100}
+                    maxLength={200}
                     value={clues[key] || ''}
                     onChange={e => onClueChange(key, e.target.value)}
                     placeholder="Enter clue…"
