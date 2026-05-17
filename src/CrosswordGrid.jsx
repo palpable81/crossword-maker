@@ -7,6 +7,8 @@ export default function CrosswordGrid({ grid, size, onUpdateCell, onSelectionCha
   const [direction, setDirection] = useState('across') // 'across' | 'down'
   const [suggestions, setSuggestions] = useState(null)
   const [isLoading, setIsLoading] = useState(false)
+  const [minLen, setMinLen] = useState(2)
+  const [maxLen, setMaxLen] = useState(12)
   const cellRefs = useRef({})
 
   const getRef = (row, col) => {
@@ -41,12 +43,6 @@ export default function CrosswordGrid({ grid, size, onUpdateCell, onSelectionCha
   const handleKeyDown = useCallback((e, row, col) => {
     const cell = grid[row][col]
 
-    if (e.key === ' ' || e.key === '.') {
-      e.preventDefault()
-      onUpdateCell(row, col, { black: !cell.black, letter: '' })
-      return
-    }
-
     if (e.key === 'Backspace') {
       e.preventDefault()
       if (cell.letter) {
@@ -71,17 +67,19 @@ export default function CrosswordGrid({ grid, size, onUpdateCell, onSelectionCha
 
     if (/^[a-zA-Z]$/.test(e.key)) {
       e.preventDefault()
-      if (!cell.black) {
-        onUpdateCell(row, col, { letter: e.key.toUpperCase() })
-        if (direction === 'across') move(row, col, 0, 1)
-        else move(row, col, 1, 0)
-      }
+      onUpdateCell(row, col, { letter: e.key.toUpperCase() })
+      if (direction === 'across') move(row, col, 0, 1)
+      else move(row, col, 1, 0)
     }
   }, [grid, direction, move, onUpdateCell])
 
   const fetchSuggestions = useCallback(async () => {
     const info = getWordInfo(grid, selected, direction, size)
     if (!info) return
+    if (info.cells.length < minLen || info.cells.length > maxLen) {
+      setSuggestions([])
+      return
+    }
     setIsLoading(true)
     setSuggestions(null)
     try {
@@ -91,7 +89,12 @@ export default function CrosswordGrid({ grid, size, onUpdateCell, onSelectionCha
       const results = []
       for (const d of data) {
         const word = d.word.replace(/\s+/g, '').toUpperCase()
-        if (word.length >= 2 && !seen.has(word) && wordMatchesSlot(word.toLowerCase(), info.cells)) {
+        if (
+          word.length >= minLen &&
+          word.length <= maxLen &&
+          !seen.has(word) &&
+          wordMatchesSlot(word.toLowerCase(), info.cells)
+        ) {
           seen.add(word)
           results.push(word)
         }
@@ -102,7 +105,7 @@ export default function CrosswordGrid({ grid, size, onUpdateCell, onSelectionCha
     } finally {
       setIsLoading(false)
     }
-  }, [grid, selected, direction, size])
+  }, [grid, selected, direction, size, minLen, maxLen])
 
   const applyWord = useCallback((word) => {
     const info = getWordInfo(grid, selected, direction, size)
@@ -135,7 +138,7 @@ export default function CrosswordGrid({ grid, size, onUpdateCell, onSelectionCha
         {grid.map((row, r) =>
           row.map((cell, c) => {
             const isSelected = selected?.row === r && selected?.col === c
-            const inWord = selected && isInWord(grid, selected, direction, r, c, size)
+            const inWord = selected && isInWord(grid, selected, direction, r, c)
             const num = clueNumbers.numbers[r]?.[c]
             const ref = getRef(r, c)
 
@@ -144,36 +147,57 @@ export default function CrosswordGrid({ grid, size, onUpdateCell, onSelectionCha
                 key={`${r}-${c}`}
                 className={[
                   'cell',
-                  cell.black ? 'black' : '',
-                  (!cell.black && !cell.letter) ? 'empty' : '',
+                  !cell.letter ? 'empty' : '',
                   isSelected ? 'selected' : '',
-                  (!cell.black && inWord && !isSelected) ? 'highlighted' : '',
+                  (inWord && !isSelected) ? 'highlighted' : '',
                 ].filter(Boolean).join(' ')}
                 onClick={() => handleClick(r, c)}
               >
-                {!cell.black && (
-                  <>
-                    {num && <span className="cell-number">{num}</span>}
-                    <input
-                      ref={el => { ref.current = el }}
-                      className="cell-input"
-                      type="text"
-                      maxLength={1}
-                      value={cell.letter}
-                      readOnly
-                      onFocus={() => setSelected({ row: r, col: c })}
-                      onKeyDown={e => handleKeyDown(e, r, c)}
-                      tabIndex={isSelected ? 0 : -1}
-                      aria-label={`Row ${r + 1}, Column ${c + 1}`}
-                    />
-                  </>
-                )}
+                <>
+                  {num && <span className="cell-number">{num}</span>}
+                  <input
+                    ref={el => { ref.current = el }}
+                    className="cell-input"
+                    type="text"
+                    maxLength={1}
+                    value={cell.letter}
+                    readOnly
+                    onFocus={() => setSelected({ row: r, col: c })}
+                    onKeyDown={e => handleKeyDown(e, r, c)}
+                    tabIndex={isSelected ? 0 : -1}
+                    aria-label={`Row ${r + 1}, Column ${c + 1}`}
+                  />
+                </>
               </div>
             )
           })
         )}
       </div>
       <div className="suggest-bar">
+        <div className="word-length-filter">
+          <label>
+            Min length
+            <input
+              type="number"
+              className="length-input"
+              min={1}
+              max={maxLen}
+              value={minLen}
+              onChange={e => setMinLen(Math.max(1, Math.min(Number(e.target.value), maxLen)))}
+            />
+          </label>
+          <label>
+            Max length
+            <input
+              type="number"
+              className="length-input"
+              min={minLen}
+              max={20}
+              value={maxLen}
+              onChange={e => setMaxLen(Math.max(minLen, Math.min(Number(e.target.value), 20)))}
+            />
+          </label>
+        </div>
         <button
           className="btn-suggest"
           onClick={fetchSuggestions}
@@ -198,35 +222,17 @@ export default function CrosswordGrid({ grid, size, onUpdateCell, onSelectionCha
   )
 }
 
-function isInWord(grid, selected, direction, r, c, size) {
-  if (direction === 'across') {
-    if (r !== selected.row) return false
-    // Find word bounds for selected cell
-    let start = selected.col
-    while (start > 0 && !grid[r][start - 1].black) start--
-    let end = selected.col
-    while (end < size - 1 && !grid[r][end + 1].black) end++
-    return c >= start && c <= end
-  } else {
-    if (c !== selected.col) return false
-    let start = selected.row
-    while (start > 0 && !grid[start - 1][c].black) start--
-    let end = selected.row
-    while (end < size - 1 && !grid[end + 1][c].black) end++
-    return r >= start && r <= end
-  }
+function isInWord(grid, selected, direction, r, c) {
+  if (direction === 'across') return r === selected.row
+  return c === selected.col
 }
 
 function buildPattern(cells) {
-  // Use known letters as anchors; trailing empty cells become * so shorter words are returned too
-  const lastFilled = cells.reduce((acc, c, i) => (c ? i : acc), -1)
-  if (lastFilled === -1) return '??*' // all empty: return common words of any length ≥ 2
-  return cells.slice(0, lastFilled + 1).map(c => c || '?').join('') + '*'
+  return cells.map(c => c || '?').join('')
 }
 
 function wordMatchesSlot(word, cells) {
-  // word has already had spaces stripped and is lowercase; cells are lowercase or ''
-  if (word.length > cells.length) return false
+  if (word.length !== cells.length) return false
   for (let i = 0; i < word.length; i++) {
     if (cells[i] && cells[i] !== word[i]) return false
   }
@@ -238,18 +244,18 @@ function getWordInfo(grid, selected, direction, size) {
   const { row, col } = selected
   if (direction === 'across') {
     let start = col
-    while (start > 0 && isOpen(grid, row, start - 1, size)) start--
+    while (start > 0 && grid[row][start - 1].letter) start--
     let end = col
-    while (end < size - 1 && !grid[row][end + 1].black) end++
+    while (end < size - 1 && grid[row][end + 1].letter) end++
     const cells = Array.from({ length: end - start + 1 }, (_, i) =>
       grid[row][start + i].letter.toLowerCase()
     )
     return { cells, pattern: buildPattern(cells), direction: 'across', row, startCol: start }
   } else {
     let start = row
-    while (start > 0 && isOpen(grid, start - 1, col, size)) start--
+    while (start > 0 && grid[start - 1][col].letter) start--
     let end = row
-    while (end < size - 1 && !grid[end + 1][col].black) end++
+    while (end < size - 1 && grid[end + 1][col].letter) end++
     const cells = Array.from({ length: end - start + 1 }, (_, i) =>
       grid[start + i][col].letter.toLowerCase()
     )

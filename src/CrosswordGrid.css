@@ -26,11 +26,6 @@
   justify-content: center;
 }
 
-.cell.black {
-  background: #1a1a1a;
-  cursor: pointer;
-}
-
 .cell.highlighted {
   background: #b3d4ff;
 }
@@ -80,6 +75,34 @@
   flex-direction: column;
   align-items: center;
   gap: 12px;
+}
+
+.word-length-filter {
+  display: flex;
+  gap: 20px;
+  align-items: center;
+}
+
+.word-length-filter label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: #555;
+}
+
+.length-input {
+  width: 52px;
+  padding: 4px 6px;
+  font-size: 13px;
+  border: 1.5px solid #ccc;
+  border-radius: 4px;
+  text-align: center;
+}
+
+.length-input:focus {
+  outline: none;
+  border-color: #2a7a2a;
 }
 
 .btn-suggest {

@@ -8,7 +8,7 @@ const GRID_SIZE = 12
 
 function createEmptyGrid(size) {
   return Array.from({ length: size }, () =>
-    Array.from({ length: size }, () => ({ letter: '', black: false }))
+    Array.from({ length: size }, () => ({ letter: '' }))
   )
 }
 
@@ -56,7 +56,7 @@ export default function App() {
     <div className="app">
       <header className="app-header">
         <h1>Crossword Maker</h1>
-        <p className="hint">Click a cell to type a letter &middot; Press <kbd>Space</kbd> or <kbd>.</kbd> to toggle black square &middot; Arrow keys to navigate</p>
+        <p className="hint">Click a cell to type a letter &middot; Arrow keys to navigate</p>
         <div className="header-actions">
           <button className="btn-print" onClick={() => window.print()}>Print Puzzle</button>
           <button className="btn-clear" onClick={clearGrid}>Clear Grid</button>

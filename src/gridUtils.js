@@ -1,5 +1,5 @@
 export function isOpen(grid, r, c, size) {
-  return r >= 0 && r < size && c >= 0 && c < size && !grid[r][c].black && !!grid[r][c].letter
+  return r >= 0 && r < size && c >= 0 && c < size && !!grid[r][c].letter
 }
 
 export function computeClueNumbers(grid, size) {
