@@ -151,6 +151,10 @@
     print-color-adjust: exact;
   }
 
+  .cell {
+    border: 1px solid #222;
+  }
+
   .cell.highlighted,
   .cell.selected {
     background: #fff !important;
